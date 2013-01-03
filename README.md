@@ -7,7 +7,7 @@ this project has two parts:
 
 Primary this was used to raise-from-groove of my old plotter MINIGRAF ARITMA A507.
 
-HPGL processor
+Plotr-HPGL processor
 --------------
 simple utility to process HPGL file with 3 types of output
 - image (bitmap)
@@ -31,7 +31,7 @@ It can do some operations for you
 see commandline help for more
 
 
-Arduino sources
+minigraf-Arduino sources
 ---------------
 receives HPGL over serial port (at 57600 bauds) and drives step motors.
 It is assumed, that step-mottors already has TTL counter driver, so there are 3 X-pins (D7-D5), 3 Y-pins (D4-D2) and PEN pin (D12).
@@ -45,3 +45,9 @@ PRx,y[,x,y]*;
 LBtext<0xD>
 
 Enjoy
+
+Installation, compilation
+-------------------------
+plotr - simple c# .NET 4.5 application. Open & compile with Visual Studio 2012. You can use SDK or express.
+minigraf - use arduino addin to Visual studio 2012
+
