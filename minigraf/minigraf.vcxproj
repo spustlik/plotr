@@ -44,7 +44,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>C:\Program Files (x86)\arduino-1.0.2\hardware\arduino\cores\arduino;C:\Program Files (x86)\arduino-1.0.2\hardware\arduino\variants\eightanaloginputs;c:\program files (x86)\arduino-1.0.2\hardware\tools\avr\avr\include\;c:\program files (x86)\arduino-1.0.2\hardware\tools\avr\avr\include\avr\;c:\program files (x86)\arduino-1.0.2\hardware\tools\avr\avr\;c:\program files (x86)\arduino-1.0.2\hardware\tools\avr\lib\gcc\avr\4.3.2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>C:\Users\stuchlik\Dropbox\Arduino\minigraf\Visual Micro\.minigraf.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles>D:\GitHub\plotr\minigraf\Visual Micro\.minigraf.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <PreprocessorDefinitions>ARDUINO=102;__AVR_ATmega328P__;F_CPU=16000000L;__AVR__;__cplusplus;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -71,7 +71,28 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="debugging.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="font.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="hpglparser.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="plotter.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="point.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
     <ClInclude Include="Visual Micro\.minigraf.vsarduino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="debugging.cpp" />
+    <ClCompile Include="font.cpp" />
+    <ClCompile Include="hpglparser.cpp" />
+    <ClCompile Include="plotter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
