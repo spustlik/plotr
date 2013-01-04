@@ -2,8 +2,8 @@ plotr
 =====
 
 this project has two parts:
-1. c# HPGL processor for some manipulations with simple HPGL files (Hewlett-Packard graphics language) used for plotters
-2. arduino project for receiving simple HPGL over serial port and using it to drive step-motors
+- 1. c# HPGL processor for some manipulations with simple HPGL files (Hewlett-Packard graphics language) used for plotters
+- 2. arduino project for receiving simple HPGL over serial port and using it to drive step-motors
 
 Primary this was used to raise-from-groove of my old plotter MINIGRAF ARITMA A507.
 
