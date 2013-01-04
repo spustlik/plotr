@@ -38,11 +38,11 @@ It is assumed, that step-mottors already has TTL counter driver, so there are 3 
 There is also hard-coded timing for my plotter, so you can change it.
 
 implemented HGPL commands:
-PU[x,y];
-PD[x,y]*;
-PAx,y[,x,y]*;
-PRx,y[,x,y]*;
-LBtext<0xD>
+- PU[x,y];
+- PD[x,y]*;
+- PAx,y[,x,y]*;
+- PRx,y[,x,y]*;
+- LBtext<0xD>
 
 Enjoy
 
