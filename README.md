@@ -10,11 +10,11 @@ Primary this was used to raise-from-groove of my old plotter MINIGRAF ARITMA A50
 Plotr-HPGL processor
 --------------
 simple utility to process HPGL file with 3 types of output
-- image (bitmap)
+- *image* (bitmap)
   it can convert HPGL file into image (png by default)
-- file 
-  just for do some operations with your HPGL file, see more)
-- serial port
+- *file* 
+  just for doing some operations with your HPGL file (see more)
+- *serial port*
   for sending your file to your home-made potter. It can be paused for changing your pen etc.
 
 Utility supports only some commands of HPGL language:
