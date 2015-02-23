@@ -1,4 +1,5 @@
-﻿using Hpgl.Converters;
+﻿using Gerber.Language;
+using Hpgl.Converters;
 using Hpgl.Language;
 using Hpgl.Transformations;
 using System;
@@ -43,19 +44,45 @@ namespace Plotr
 
             //TODO?: read SVG and convert to HPGL
             //TODO?: vectorize SVG, so white fills are wiped out from vectors
-            var parser = new HpglParser();
-            var hpgl = parser.Parse(File.OpenRead(inputFileName));
-            Console.WriteLine("HPGL file {0} readed", inputFileName);
-            Console.WriteLine("Stats:");
-            Console.WriteLine("Parser: {0} tokens, {1} commands", hpgl.Count, hpgl.Where(h => !(h is Terminator)).Count());
+            List<HpglItem> hpglData;
+
+            if (cmd.GetParamOrDefault("gerber", false))
+            {
+                var gerberParser = new GerberParser();
+                using (var f = File.OpenRead(inputFileName))
+                {
+                    var gerberData = gerberParser.Parse(f);
+                    foreach (var item in gerberData)
+                    {
+                        Console.WriteLine(item);
+                    }
+                    var comp = cmd.GetParamOrDefault("gerberpen", 0.0);
+                    var g2h = new Gerber.Transformations.Gerber2Hpgl() { PenWidthCompensation = comp };
+                    hpglData = g2h.Translate(gerberData);
+                }
+            }
+            else
+            {
+                var parser = new HpglParser();
+                using (var f = File.OpenRead(inputFileName))
+                {
+                    hpglData = parser.Parse(f);
+                }
+                Console.WriteLine("HPGL file {0} readed", inputFileName);
+                Console.WriteLine("Stats:");
+                Console.WriteLine("Parser: {0} tokens, {1} commands", hpglData.Count, hpglData.Where(h => !(h is Terminator)).Count());
+            }
+
+
+            //MEASURE
             {
                 var measure = new Measure();
-                measure.Visit(hpgl);
+                measure.Visit(hpglData);
                 Console.WriteLine("Dimensions: min={0}, max={1}", measure.Min, measure.Max);
                 Console.WriteLine("Length of lines: with pen down={0:.1}, with pen up={1:.1}", measure.PenDownLength, measure.PenUpLength);
             }
             //remove unknowns
-            hpgl = hpgl.Where(h => !(h is UnknownCommand)).ToList();
+            hpglData = hpglData.Where(h => !(h is Hpgl.Language.UnknownCommand)).ToList();
 
             int width = cmd.GetParamOrDefault("width", 1520);
             int height = cmd.GetParamOrDefault("height", 2160);
@@ -64,17 +91,17 @@ namespace Plotr
             {
                 Console.WriteLine("Textificating...");
                 var t = new Textificator();
-                hpgl = t.Process(hpgl);
+                hpglData = t.Process(hpglData);
             }
             if (cmd.GetParamOrDefault("absolutize", false))
             {
                 var a = new Absolutizer();
-                hpgl = a.Process(hpgl);
+                hpglData = a.Process(hpglData);
             }
             //transformation
             {
                 var transformer = new Transformer(cmd.GetParamOrDefault("transform", string.Empty));
-                hpgl = transformer.Transform(hpgl);
+                hpglData = transformer.Transform(hpglData);
             }
 
             //autoscale
@@ -82,7 +109,7 @@ namespace Plotr
             {
                 Console.WriteLine("Autoscaling...");
                 var measure = new Measure();
-                measure.Visit(hpgl);
+                measure.Visit(hpglData);
                 if (measure.ContainsRelative)
                 {
                     Console.WriteLine("Warning: input contains PR, results can be strange");
@@ -91,13 +118,13 @@ namespace Plotr
                 var size = new HPoint(measure.Max.X - measure.Min.X, measure.Max.Y - measure.Min.Y);
                 //size.X/size.Y=width/height
                 //newptx/pt.x = width/size.X
-                double sx = (double)(width*0.9d) / size.X;
-                double sy = (double)(height*0.9d) / size.Y;
+                double sx = (double)(width * 0.9d) / size.X;
+                double sy = (double)(height * 0.9d) / size.Y;
                 var transformer = new Transformer();
                 transformer.Move(-measure.Min.X, -measure.Min.Y);
                 transformer.Scale(sx < sy ? sx : sy);
                 transformer.Move((int)(width * 0.05d), (int)(height * 0.05d));
-                hpgl = transformer.Transform(hpgl);
+                hpglData = transformer.Transform(hpglData);
             }
 
             //optimalization
@@ -105,10 +132,10 @@ namespace Plotr
             {
                 Console.WriteLine("Optimizing...");
                 var optimizer = new SegmentationOptimizer();
-                hpgl = optimizer.Process(hpgl);
+                hpglData = optimizer.Process(hpglData);
 
                 var optmeasure = new Measure();
-                optmeasure.Visit(hpgl);
+                optmeasure.Visit(hpglData);
                 Console.WriteLine("Optimized lines: with pen down={0:.1}, with pen up={1:.1}", optmeasure.PenDownLength, optmeasure.PenUpLength);
             }
 
@@ -125,7 +152,7 @@ namespace Plotr
                         var hpgl2Bmp = new Hpgl2Bmp();
                         hpgl2Bmp.DebugPenUp = cmd.GetParamOrDefault("showPenUp", false);
                         hpgl2Bmp.Numbering = cmd.GetParamOrDefault("showNumbers", false);
-                        hpgl2Bmp.Process(bmp, hpgl);
+                        hpgl2Bmp.Process(bmp, hpglData);
                         bmp.Save(outFile);
                         break;
                     }
@@ -134,7 +161,7 @@ namespace Plotr
                         var sp = cmd.GetParamOrDefault("serial", "COM1,9600");
                         var ser = new Hpgl2SerialConsole(sp);
                         Console.WriteLine("Writing to serial {0},{1},{2},{3},{4}", ser.Port.PortName, ser.Port.BaudRate, ser.Port.Parity, ser.Port.DataBits, ser.Port.StopBits);
-                        ser.Process(hpgl);
+                        ser.Process(hpglData);
                         break;
                     }
                 case "file":
@@ -142,7 +169,7 @@ namespace Plotr
                         var outFile = cmd.GetParamOrDefault("filename", "result.plt");
                         Console.WriteLine("Writing to file {0}", outFile);
                         var f = new Hpgl2File();
-                        f.Process(outFile, hpgl);
+                        f.Process(outFile, hpglData);
                         break;
                     }
                 default:
@@ -154,7 +181,7 @@ namespace Plotr
 
         private static void Help()
         {
-            Console.WriteLine("PLOTR - HPGL processing utility *** Copyright (c) 2012 Jan Stuchlik");
+            Console.WriteLine("PLOTR - HPGL processing utility *** Copyright (c) 2012-2015 Jan Stuchlik");
             Console.WriteLine("Syntax: {0} input /output=image|serial|file [options]", Assembly.GetExecutingAssembly().GetName().Name);
             Console.WriteLine("Common options:");
             Console.WriteLine("  /textify=true - replace LB with default 6x4 font (default:false)");
@@ -178,6 +205,11 @@ namespace Plotr
             Console.WriteLine("  /showNumbers=true - numbers the lines");
             Console.WriteLine("  /width=1000 - sets output image width");
             Console.WriteLine("  /height=1000 - sets output image height");
+            Console.WriteLine();
+            Console.WriteLine("GERBER - it can also read simple Gerber files from Fritzing");
+            Console.WriteLine("  file will be internally converted into HPGL with scale 1/1000 mm; use /transform=zoom:0.008 for MINIGRAF");
+            Console.WriteLine("  /gerber=true - means that input file is in gerber format");
+            Console.WriteLine("  /gerberpen=1.3 - sets pen width compensation in [mm] for filling apertures (default: 0.0)");
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using Hpgl.Language;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -44,17 +45,17 @@ namespace Hpgl.Transformations
                 }
                 else if (par[0] == "scalex" || par[0] == "zoomx")
                 {
-                    var z = double.Parse(par[1]);
+                    var z = double.Parse(par[1], CultureInfo.InvariantCulture);
                     Scale(z, 1);
                 }
                 else if (par[0] == "scaley" || par[0] == "zoomy")
                 {
-                    var z = double.Parse(par[1]);
+                    var z = double.Parse(par[1], CultureInfo.InvariantCulture);
                     Scale(1, z);
                 }
                 else if (par[0] == "scale" || par[0] == "zoom")
                 {
-                    var z = double.Parse(par[1]);
+                    var z = double.Parse(par[1], CultureInfo.InvariantCulture);
                     Scale(z, z);
                 }
                 else

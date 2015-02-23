@@ -25,6 +25,10 @@ namespace Hpgl.Language
         {
             return new HPoint() { X = X + p.X, Y = Y + p.Y };
         }
+        public HPoint Add(int x, int y)
+        {
+            return new HPoint() { X = X + x, Y = Y + y };
+        }
         public HPoint Sub(HPoint p)
         {
             return new HPoint() { X = X - p.X, Y = Y - p.Y };

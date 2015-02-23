@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -53,7 +54,7 @@ namespace Plotr
             var r = parameters.FirstOrDefault(p => p.Item1.ToUpper() == name.ToUpper());
             if (r == null)
                 return defValue;
-            return Double.Parse(r.Item2);
+            return Double.Parse(r.Item2, CultureInfo.InvariantCulture);
         }
 
         public bool GetParamOrDefault(string name, bool defValue)

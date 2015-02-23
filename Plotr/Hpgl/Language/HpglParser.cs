@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using TextParsing;
 
 namespace Hpgl.Language
 {
-    public class HpglParser
+    public class HpglParser : TextParser
     {
-        private StreamReader sr;
 
         public List<HpglItem> Parse(Stream s)
         {
-            using (sr = new StreamReader(s))
+            using (_reader = new StreamReader(s))
             {
-                return ParseReader(sr);
+                return ParseReader(_reader);
             }
         }
 
@@ -46,7 +46,7 @@ namespace Hpgl.Language
                 case "LB":
                     {
                         string text = "";
-                        while (!sr.EndOfStream && !text.EndsWith(textTerminator))
+                        while (!_reader.EndOfStream && !text.EndsWith(textTerminator))
                         {
                             text += peek();
                             read();
@@ -67,31 +67,16 @@ namespace Hpgl.Language
             }
         }
 
-        char? readed;
-        private char peek()
-        {
-            if (readed == null)
-            {
-                read();
-            }
-            return readed.Value;
-        }
-
-        private void read()
-        {
-            readed = (char)sr.Read();
-        }
-
         string command;
         private bool readCommand()
         {
             do
             {
-                while (!sr.EndOfStream && !(Char.IsLetter(peek()) || peek() == ';'))
+                while (!_reader.EndOfStream && !(Char.IsLetter(peek()) || peek() == ';'))
                 {
                     read();
                 }
-                if (sr.EndOfStream)
+                if (_reader.EndOfStream)
                     return false;
                 command = "" + peek();
                 read();
@@ -140,23 +125,23 @@ namespace Hpgl.Language
             if (!readWhitespaces())
                 return false;
             string s = "";
-            while (!sr.EndOfStream && (Char.IsDigit(peek()) || peek()=='-'))
+            while (!_reader.EndOfStream && (Char.IsDigit(peek()) || peek()=='-'))
             {
                 s += peek();
                 read();
             }
-            if (sr.EndOfStream)
+            if (_reader.EndOfStream)
                 return false;
             return Int32.TryParse(s, out i);
         }
 
         private bool readWhitespaces()
         {
-            while (!sr.EndOfStream && Char.IsWhiteSpace(peek()))
+            while (!_reader.EndOfStream && Char.IsWhiteSpace(peek()))
             {
                 read();
             }
-            return !sr.EndOfStream;
+            return !_reader.EndOfStream;
         }
 
     }
