@@ -2,19 +2,19 @@ plotr
 =====
 
 this project has two parts:
-1. c# HPGL processor for some manipulations with simple HPGL files (Hewlett-Packard graphics language) used for plotters
-2. arduino project for receiving simple HPGL over serial port and using it to drive step-motors
+- 1. c# HPGL processor for some manipulations with simple HPGL files (Hewlett-Packard graphics language) used for plotters
+- 2. arduino project for receiving simple HPGL over serial port and using it to drive step-motors
 
 Primary this was used to raise-from-groove of my old plotter MINIGRAF ARITMA A507.
 
 Plotr-HPGL processor
 --------------
 simple utility to process HPGL file with 3 types of output
-- image (bitmap)
+- *image* (bitmap)
   it can convert HPGL file into image (png by default)
-- file 
-  just for do some operations with your HPGL file, see more)
-- serial port
+- *file* 
+  just for doing some operations with your HPGL file (see more)
+- *serial port*
   for sending your file to your home-made potter. It can be paused for changing your pen etc.
 
 Utility supports only some commands of HPGL language:
@@ -38,11 +38,11 @@ It is assumed, that step-mottors already has TTL counter driver, so there are 3 
 There is also hard-coded timing for my plotter, so you can change it.
 
 implemented HGPL commands:
-PU[x,y];
-PD[x,y]*;
-PAx,y[,x,y]*;
-PRx,y[,x,y]*;
-LBtext<0xD>
+- PU[x,y];
+- PD[x,y]*;
+- PAx,y[,x,y]*;
+- PRx,y[,x,y]*;
+- LBtext<0xD>
 
 Enjoy
 
