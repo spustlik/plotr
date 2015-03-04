@@ -64,6 +64,7 @@
     <Compile Include="Hpgl\Transformations\Textificator.cs" />
     <Compile Include="Hpgl\Transformations\Transformer.cs" />
     <Compile Include="TextParser.cs" />
+    <Compile Include="Vector.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -19,8 +19,10 @@ namespace Gerber.Language
 
         private List<GerberItem> Parse(StreamReader sr)
         {
-            //TODO: replace with char-reading alg.
+            //TODO: maybe replace with char-reading alg.
             // see official gerber doc for basic syntax
+            // http://www.ucamco.com/files/downloads/file/81/the_gerber_file_format_specification.pdf
+            // page 37
             var result = new List<GerberItem>();
             string line;
             do

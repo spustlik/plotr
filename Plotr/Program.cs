@@ -52,7 +52,7 @@ namespace Plotr
                 using (var f = File.OpenRead(inputFileName))
                 {
                     var gerberData = gerberParser.Parse(f);
-                    foreach (var item in gerberData)
+                    foreach (var item in gerberData.OfType<Gerber.Language.UnknownCommand>())
                     {
                         Console.WriteLine(item);
                     }

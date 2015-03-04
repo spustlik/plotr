@@ -1,4 +1,5 @@
 ﻿using Gerber.Language;
+using Graphics2D;
 using Hpgl.Language;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace Gerber.Transformations
         private string _currentTool;
         private ApertureDefinition _currentAperture;
         private Units _units;
+        private HPoint _lastPosition;
 
         internal List<Hpgl.Language.HpglItem> Translate(List<GerberItem> gerberData)
         {
@@ -53,14 +55,37 @@ namespace Gerber.Transformations
                 if (g is XYCommand)
                 {
                     var cmd = (XYCommand)g;
-
+                    var pos = Transform(cmd.X, cmd.Y);
                     if (cmd.Param == "D01")
                     {
-                        result.Add(new PenDown() { Points = { Transform(cmd.X, cmd.Y) } });
+                        var ca = _currentAperture as CircularApertureDefinition;
+                        if (ca != null)
+                        {
+                            //result.Add(new SelectPen() { Pen = (int)ca.R * 100 });
+                            var w = 1000 * ca.R / 2;
+                            var size = Transform(w, w);
+                            var points = new List<HPoint>();
+                            points.Add(pos);
+                            var offset = fillStep;
+                            while (offset < size.X)
+                            {
+                                points.AddRange(GetOutlinedRect(pos, _lastPosition, offset));
+                                offset += fillStep;
+                            }
+                            if (points.Count > 1)
+                            {
+                                points.Add(pos);
+                            }
+                            result.Add(new PenDown() { Points = points });
+                        }
+                        else
+                        {
+                            result.Add(new PenDown() { Points = { pos } });
+                        }
                     }
                     if (cmd.Param == "D02")
                     {
-                        result.Add(new PenUp() { Points = { Transform(cmd.X, cmd.Y) } });
+                        result.Add(new PenUp() { Points = { pos } });
                     }
                     if (cmd.Param == "D03")
                     {
@@ -78,9 +103,41 @@ namespace Gerber.Transformations
                             throw new InvalidOperationException("Unknown type of aperture " + _currentAperture);
                         }
                     }
+                    _lastPosition = pos;
                 }
             }
             return result;
+        }
+
+        private HPoint[] GetOutlinedRect(HPoint p1, HPoint p2, int outline)
+        {
+            /*     p1
+             *   +--+--+
+             *    \  \  \
+             *     \  \  \
+             *      +--+--+
+             *         p2   p2+len
+             * 
+             */
+            if (p1 == p2)
+            {
+                return new[] { p1, p1, p1, p1 };
+            }
+
+            var pt1 = new Point2D(p1.X, p1.Y);
+            var pt2 = new Point2D(p2.X, p2.Y);
+            var vector = Vector2D.FromPoints(pt2, pt1);
+            var points = new[]{
+                new Point2D(-outline,0),
+                new Point2D(0,outline),
+                new Point2D(vector.Length,outline),
+                new Point2D(vector.Length+outline,0),
+                new Point2D(vector.Length,-outline),
+                new Point2D(0,-outline),
+                new Point2D(-outline,0),
+            };
+            var rotated = points.Select(pt => pt1.Add(pt.Rotate(vector.Angle))).Select(pt => new HPoint((int)pt.X, (int)pt.Y)).ToArray();
+            return rotated;
         }
 
         private HPoint Transform(double x, double y)

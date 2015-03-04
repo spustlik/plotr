@@ -6,6 +6,33 @@
 #include "debugging.h"
 Point currentPos = {0, 0};
 
+/*
+This is Czech description of Minigraf Aritma connector:
+
+Špièka
+konektoru   
+minigrafu	barva
+žíly
+kabelu   	signál
+schématu   
+minigrafu	logioká zátìž   
+signálu
+v minigrafu	význam
+12				nepoužito
+11	r	0V		spojení zemí minigrafu a poèítaèe
+10	ž	X1	5	nejnižší binární øád souøadnice X
+9	m	X2	5	prostøední binární øád souøadnice X
+8	b	X4	5	nejvyšší binární øád souøadnice X
+7				klíè
+6				rezerva
+5	r	P	5	P=H pisátko spuštìno, P=L pisátko zvednuto
+4	b	Y1	5	nejnižší binární øád souøadnice Y
+3	m	Y2	5	prostøední binární øád souøadnice Y
+2	ž	Y4	5	nejvyšší binární øád souøadnice Y
+1				spojení zemí minigrafu a poèítaèe
+
+
+*/
 
 const int X1pin=7; 
 const int X2pin=6; 
