@@ -38,17 +38,35 @@ namespace Hpgl.Converters
             if (IsPaused || (k != null && k.Value.Key == ConsoleKey.P))
             {
                 IsPaused = false;
+                Console.Clear();
                 Console.Write("\nPaused...");
                 Console.WriteLine(@"
 Press <R> for resume, <Q> for quit
+<N> process next instruction, <BACKSPACE> goto previous instruction (do not process it)
 <SPACE> for showing actual pen position
 <ARROWS> for moving pen (CTRL, SHIFT, ALT for 8, 80, 800 multiplier)
-<U> for pen UP, <D> for pen down
+<U> for pen UP, <D> for pen down, <1> go to minimum coords <2> go to maximum coords
 <I> Initialize, <B> set basic position (BP)
-<N> process next instruction
-<+/-> increase/decrease speed
+<+/-> increase/decrease speed of pen
 ");
+                DumpCommands();
                 KeybardLoop();
+            }
+        }
+
+        private void DumpCommands()
+        {
+            var from = Math.Max(0, CurrentCommand - 5);
+            for (int i = 0; i < 10; i++)
+            {
+                int index = from + i;
+                if (index >= Commands.Count)
+                    break;
+                Console.Write(CurrentCommand == index ? ">" : " ");
+                var cmd = Commands[index].HpglStr();
+                if (cmd.Length > 60)
+                    cmd = cmd.Substring(0, 59) + "...";
+                Console.WriteLine(cmd);
             }
         }
 
@@ -101,7 +119,7 @@ Press <R> for resume, <Q> for quit
                                     Console.WriteLine();
                                     return;
                                 case ConsoleKey.Q:
-                                    Send("PU;");
+                                    base.Send("PU;");
                                     Environment.Exit(1);
                                     return;
                                 case ConsoleKey.B:
@@ -113,6 +131,26 @@ Press <R> for resume, <Q> for quit
                                 case ConsoleKey.N:
                                     IsPaused = true;
                                     return;
+                                case ConsoleKey.D1:
+                                    {
+                                        var measure = new Measure();
+                                        measure.Visit(Commands);
+                                        base.Send(String.Format("PU{0},{1};", measure.Min.X, measure.Min.Y));
+                                        break;
+                                    }
+                                case ConsoleKey.D2:
+                                    {
+                                        var measure = new Measure();
+                                        measure.Visit(Commands);
+                                        base.Send(String.Format("PU{0},{1};", measure.Max.X, measure.Max.Y));
+                                        break;
+                                    }
+                                case ConsoleKey.Backspace:                                    
+                                    if (CurrentCommand > 0)
+                                        CurrentCommand--;
+                                    Console.Clear();
+                                    DumpCommands();
+                                    break;
                             }
                             break;
                     }

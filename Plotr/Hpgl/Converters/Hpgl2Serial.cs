@@ -47,7 +47,8 @@ namespace Hpgl.Converters
         {
             while (CurrentCommand < Commands.Count)
             {
-                var item = Commands[CurrentCommand++];
+                var item = Commands[CurrentCommand];
+                CurrentCommand++;
                 if (item is Terminator)
                     continue;
                 ProcessItem(item);
