@@ -14,12 +14,12 @@ namespace Gerber.Transformations
         /// pen width compensation in [mm]
         /// </summary>
         public double PenWidthCompensation { get; set; }
+        public Units Units { get; set; }
         private int fillStep = 500; //1/1000 mm
 
         private bool _exposure = false;
         private string _currentTool;
         private ApertureDefinition _currentAperture;
-        private Units _units;
         private HPoint _lastPosition;
 
         internal List<Hpgl.Language.HpglItem> Translate(List<GerberItem> gerberData)
@@ -31,7 +31,7 @@ namespace Gerber.Transformations
             {
                 if (g is SetUnitsCommand)
                 {
-                    _units = ((SetUnitsCommand)g).Units;
+                    Units = ((SetUnitsCommand)g).Units;
                 }
                 if (g is SetUnitsTypeCommand)
                 {
@@ -46,6 +46,10 @@ namespace Gerber.Transformations
                     var cmd = (ToolPrepareCommand)g;
                     _currentTool = cmd.Param;
                     _currentAperture = gerberData.OfType<ApertureDefinition>().FirstOrDefault(a => a.Name == cmd.Param);
+                    if (_currentAperture == null)
+                    {
+                        Console.WriteLine("Error: tool prepare - tool not found " + cmd.Param);
+                    }
                 }
                 if (g is SetExposureCommand)
                 {
@@ -62,12 +66,12 @@ namespace Gerber.Transformations
                         if (ca != null)
                         {
                             //result.Add(new SelectPen() { Pen = (int)ca.R * 100 });
-                            var w = 1000 * ca.R / 2;
-                            var size = Transform(w, w);
+                            var w = 1000 * 25.4 * ca.R / 2;
+                            //var size = Transform(w, w);
                             var points = new List<HPoint>();
                             points.Add(pos);
                             var offset = fillStep;
-                            while (offset < size.X)
+                            while (offset < w)
                             {
                                 points.AddRange(GetOutlinedRect(pos, _lastPosition, offset));
                                 offset += fillStep;
@@ -89,6 +93,14 @@ namespace Gerber.Transformations
                     }
                     if (cmd.Param == "D03")
                     {
+                        if (_currentAperture == null)
+                        {
+                            throw new ApplicationException("No selected aperture");
+                        }
+
+                        //result.Add(new PenUp(){Points = {Transform(cmd.X, cmd.Y)}});
+                        //result.Add(new Label() { Text = _currentAperture.Name });
+
                         if (_currentAperture is CircularApertureDefinition)
                         {
                             FilledCircle(result, cmd.X, cmd.Y, ((CircularApertureDefinition)_currentAperture).R);
@@ -142,19 +154,21 @@ namespace Gerber.Transformations
 
         private HPoint Transform(double x, double y)
         {
-            if (_units == Units.Millimeters)
+            //returned units are 1/1000 mm
+            if (Units == Units.Millimeters)
                 return new HPoint((int)(1000 * x), (int)(1000 * y));
             else
-                return new HPoint((int)(1000 / 25.4 * x), (int)(1000 / 25.4 * y));
+                // 1 inch = 25.4 mm
+                return new HPoint((int)(25.4 * x / 100.0), (int)(25.4 * y / 100.0));
         }
 
         private void FilledRectangle(List<HpglItem> result, double x, double y, double width, double height)
         {
             //mils = 1/1000 inch
-            var w = 1000 * width / 2;
-            var h = 1000 * height / 2;
+            var w = 1000 * 25.4 * width / 2;
+            var h = 1000 * 25.4 * height / 2;
             var pt = Transform(x, y);
-            var size = Transform(w, h);
+            var size = new HPoint((int)w, (int)h); // Transform(w, h);
             size = CompensatePen(size);
             FillRect(result, pt, size.X, size.Y);
         }
@@ -170,9 +184,11 @@ namespace Gerber.Transformations
 
         private void FilledCircle(List<HpglItem> result, double x, double y, double r)
         {
-            var w = 1000 * r / 2;
+            //mils = 1/1000 inch
+            var w = 1000 * 25.4 * r / 2;
+
             var pt = Transform(x, y);
-            var size = Transform(w, w);
+            var size = new HPoint((int)w, (int)w); // Transform(w, w);
             size = CompensatePen(size);
             w = FillCircle(result, pt, size.X);
         }
@@ -192,7 +208,7 @@ namespace Gerber.Transformations
             do
             {
                 DrawRectangle(result, pt, w, h);
-                if (w < h)
+                if (w > h)
                 {
                     var ratio = 1.0 * w / h;
                     h = h - fillStep;

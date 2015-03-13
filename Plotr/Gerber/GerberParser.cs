@@ -127,7 +127,21 @@ namespace Gerber.Language
                 case "03":
                     return new FlashApertureCommand();
                 default:
-                    return new UnknownCommand() { Line = line };
+                    {
+                        var param = line.Substring(1).TrimEnd('*');
+                        if (param.Length > 0)
+                        {
+                            int p;
+                            if (Int32.TryParse(param, out p))
+                            {
+                                if (p >= 10)
+                                {
+                                    return new ToolPrepareCommand() { Param = line.TrimEnd('*') };
+                                }
+                            }
+                        }
+                        return new UnknownCommand() { Line = line };
+                    }
             }
         }
 

@@ -62,9 +62,14 @@ namespace Hpgl.Transformations
 
         protected override void VisitPenDown(PenDown item)
         {
-            isPenDown = true;
             foreach (var p in item.Points)
             {
+                if (isPenDown && p.Equals(current))
+                {
+                    Console.WriteLine("Optimized dup");
+                    continue;
+                }
+                isPenDown = true;
                 segments.Add(new Line(current, p, currentAttribs));
                 current = p;
             }

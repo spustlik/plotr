@@ -4,6 +4,6 @@
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>C:\Temp\NokiaLcd2_copperTop.gtl /gerber=true /transform=zoom:0.008 /gerberpen=0.2</StartArguments>
+    <StartArguments>C:\Temp\plotreagle\gerber-rs274x.ger /gerber=true /gerberpen=0.1 /transform=zoom:0.01 /output=file</StartArguments>
   </PropertyGroup>
 </Project>

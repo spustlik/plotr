@@ -97,6 +97,10 @@ namespace Hpgl.Language
             {
                 result.Add(pt);
                 readWhitespaces();
+                if (peek() != ',')
+                    break;
+                read();
+                readWhitespaces();
             }
             return result;
         }

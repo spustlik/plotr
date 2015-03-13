@@ -51,6 +51,20 @@ namespace Hpgl.Language
                 return Math.Sqrt(l2);
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj is HPoint)
+                return Equals((HPoint)obj);
+            return base.Equals(obj);
+        }
+        public bool Equals(HPoint p)
+        {
+            return X == p.X && Y == p.Y;
+        }
+        public override int GetHashCode()
+        {
+            return X.GetHashCode() ^ Y.GetHashCode() % 65535; //65535 is prime number
+        }
     }
 
     public abstract class HpglItem
@@ -118,7 +132,7 @@ namespace Hpgl.Language
         public int Pen { get; set; }
         public override string HpglStr()
         {
-            return "SP";
+            return String.Format("SP{0}", Pen);
         }
     }
 
@@ -128,6 +142,19 @@ namespace Hpgl.Language
         public override string HpglStr()
         {
             return "LB" + Text + "\x0d";
+        }
+    }
+
+    public class SetSpeed : HpglItem
+    {
+        public int SpeedMove { get; set; }
+        public int DelayUp { get; set; }
+        public override string HpglStr()
+        {
+            var s = SpeedMove.ToString();
+            if (DelayUp != 0)
+                s += "," + DelayUp;
+            return "VS" + s;
         }
     }
 }

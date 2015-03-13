@@ -35,19 +35,30 @@ namespace Hpgl.Converters
             return result;
         }
 
-
-        public virtual void Process(List<HpglItem> hpgl)
+        public List<HpglItem> Commands { get; set; }
+        public int CurrentCommand { get;set;}
+        public void Proces(List<HpglItem> hpgl)
         {
-            foreach (var item in hpgl.Where(h=>!(h is Terminator)))
+            Commands = hpgl;
+            CurrentCommand = 0;
+            ProcessCommands();
+        }
+        public virtual void ProcessCommands()
+        {
+            while (CurrentCommand < Commands.Count)
             {
+                var item = Commands[CurrentCommand++];
+                if (item is Terminator)
+                    continue;
                 ProcessItem(item);
             }
         }
 
-        private void ProcessItem(HpglItem item)
+        protected virtual void ProcessItem(HpglItem item)
         {
             Send(item.HpglStr());
         }
+
     }
 
 

@@ -57,7 +57,9 @@ namespace Plotr
                         Console.WriteLine(item);
                     }
                     var comp = cmd.GetParamOrDefault("gerberpen", 0.0);
-                    var g2h = new Gerber.Transformations.Gerber2Hpgl() { PenWidthCompensation = comp };
+                    var unitstext = cmd.GetParamOrDefault("gerberunits", "Inches");
+                    var units = (Units)Enum.Parse(typeof(Units), unitstext);
+                    var g2h = new Gerber.Transformations.Gerber2Hpgl() { PenWidthCompensation = comp, Units = units };
                     hpglData = g2h.Translate(gerberData);
                 }
             }
@@ -139,6 +141,62 @@ namespace Plotr
                 Console.WriteLine("Optimized lines: with pen down={0:.1}, with pen up={1:.1}", optmeasure.PenDownLength, optmeasure.PenUpLength);
             }
 
+            
+            var maxstep = cmd.GetParamOrDefault("maxstep", 0);
+            if (maxstep > 0)
+            {
+                int split = 0;
+                int i = 0;
+                while (i < hpglData.Count)
+                {
+                    var pcmd = hpglData[i] as HpglPointsCommand;
+                    if (pcmd != null)
+                    {
+                        if (pcmd.Points.Count > maxstep)
+                        {
+                            split++;
+                            var newcmd = Activator.CreateInstance(pcmd.GetType()) as HpglPointsCommand;
+                            newcmd.Points = pcmd.Points.Take(maxstep).ToList();
+                            hpglData.Insert(i, newcmd);
+                            pcmd.Points = pcmd.Points.Skip(maxstep).ToList();
+                        }
+                    }
+                    i++;
+                }
+                Console.WriteLine("Splitted " + split + " commands for maximum " + maxstep + " steps.");
+            }
+
+            //outline
+            var outline = cmd.GetParamOrDefault("outline", -1);
+            if (outline >= 0)
+            {
+                var measure = new Measure();
+                measure.Visit(hpglData);
+                var size = new HPoint(outline, outline);
+                var rect = new[]{
+                    new HPoint(measure.Min.X - outline, measure.Max.Y + outline),
+                    new HPoint(measure.Max.X + outline, measure.Max.Y + outline),
+                    new HPoint(measure.Max.X + outline, measure.Min.Y - outline),
+                    new HPoint(measure.Min.X - outline, measure.Min.Y - outline), 
+                };
+                hpglData.Insert(0, new PenUp() { Points = { rect[3] } });
+                hpglData.Insert(1, new PenDown() { Points = { rect[0], rect[1], rect[2], rect[3] } });
+                //hpglData.Insert(2, new PenUp() {  } );
+            }
+
+            //speed, delay
+            var s = cmd.GetParamOrDefault("speed", 0);
+            var d = cmd.GetParamOrDefault("updelay",0);
+            if (s != 0 || d!=0)
+            {
+                var ss = new SetSpeed() { SpeedMove = s, DelayUp = d };
+                hpglData.Insert(0, ss);
+            }
+            if (cmd.GetParamOrDefault("noinit", false))
+            {
+                hpglData.RemoveAll(x => x is Initialization);
+            }
+
             var outputType = cmd.GetParamOrDefault("output", "image").ToLowerInvariant();
             switch (outputType)
             {
@@ -160,8 +218,10 @@ namespace Plotr
                     {
                         var sp = cmd.GetParamOrDefault("serial", "COM1,9600");
                         var ser = new Hpgl2SerialConsole(sp);
+                        if (cmd.GetParamOrDefault("paused", false))
+                            ser.IsPaused = true;
                         Console.WriteLine("Writing to serial {0},{1},{2},{3},{4}", ser.Port.PortName, ser.Port.BaudRate, ser.Port.Parity, ser.Port.DataBits, ser.Port.StopBits);
-                        ser.Process(hpglData);
+                        ser.Proces(hpglData);
                         break;
                     }
                 case "file":
@@ -188,16 +248,20 @@ namespace Plotr
             Console.WriteLine("  /absolutize=true - remove PR instructions, which is needed for transformation (default:false)");
             Console.WriteLine("  /transform=mx:450,my:42,rot:90,zoom:1.3 - moves, rotates or scales plot in given order (default:none)");
             Console.WriteLine("  /autoscale=true - autoscales image after transformation (default:false)");
+            Console.WriteLine("  /speed=x - set speed x (ms) for moving pen when down");
+            Console.WriteLine("  /delay=x - set delay x (ms) when pen just raised");
+            Console.WriteLine("  /noinit=true - removes any initialization (IN) instructions");
+            Console.WriteLine("  /maxstep=64 - maximum length-step (PU,PD,...)");
             Console.WriteLine();
             Console.WriteLine("Optimalization options:");
             Console.WriteLine("  /optimize=false - disable optimalization");
-            Console.WriteLine("  /maxstep=64 - maximum length-step");
             Console.WriteLine();
             Console.WriteLine("FILE - writes file to new HPGL");
             Console.WriteLine("  /filename=filename - name of file (dafult: result.plt)");
             Console.WriteLine();
             Console.WriteLine("SERIAL - sends output to serial port");
             Console.WriteLine("  /serial=COM1,9600 - write result to serial COM1 port with 9600 bauds");
+            Console.WriteLine("  /paused=true - waits for keyboard before sending any command");
             Console.WriteLine();
             Console.WriteLine("IMAGE - plots output to bitmap");
             Console.WriteLine("  /filename=filename - name of file (dafult: result.png)");
@@ -206,10 +270,11 @@ namespace Plotr
             Console.WriteLine("  /width=1000 - sets output image width");
             Console.WriteLine("  /height=1000 - sets output image height");
             Console.WriteLine();
-            Console.WriteLine("GERBER - it can also read simple Gerber files from Fritzing");
+            Console.WriteLine("GERBER - it can also read simple Gerber files from Fritzing or EAGLE");
             Console.WriteLine("  file will be internally converted into HPGL with scale 1/1000 mm; use /transform=zoom:0.008 for MINIGRAF");
             Console.WriteLine("  /gerber=true - means that input file is in gerber format");
             Console.WriteLine("  /gerberpen=1.3 - sets pen width compensation in [mm] for filling apertures (default: 0.0)");
+            Console.WriteLine("  /gerberunits=Inches/Millimeters - sets default gerber units (default:Inches)");
         }
 
     }
