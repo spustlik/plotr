@@ -7,6 +7,12 @@ this project has two parts:
 
 Primary this was used to raise-from-groove of my old plotter MINIGRAF ARITMA A507.
 
+News
+----
+- Added partial support for gerber files (exported from Fritzing or Eagle). It was used for (successfull) experiment with permanent pen (for CD) to create PCB with etching. Gerber files contains informations for filling, so there is simple alghorith to fill the shapes.
+- Added more commands to interctive mode (when sending to serial port and pausing) - moving pen, adding delay between pen downs, etc. This also helps to etching scenario.
+
+
 Plotr-HPGL processor
 --------------
 simple utility to process HPGL file with 3 types of output
